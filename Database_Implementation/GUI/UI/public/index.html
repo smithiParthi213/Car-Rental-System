@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Store Management</title>
+</head>
+<body>
+  <h1>Store Management</h1>
+  
+  <!-- Add Store Form -->
+  <h2>Add New Store</h2>
+  <form id="addStoreForm">
+    <label for="streetAddress">Street Address:</label>
+    <input type="text" id="streetAddress" name="streetAddress" required><br>
+    
+    <label for="city">City:</label>
+    <input type="text" id="city" name="city" required><br>
+    
+    <label for="state">State:</label>
+    <input type="text" id="state" name="state" required><br>
+    
+    <label for="country">Country:</label>
+    <input type="text" id="country" name="country" required><br>
+    
+    <label for="contactNo">Contact No:</label>
+    <input type="tel" id="contactNo" name="contactNo" required><br>
+    
+    <label for="emailAddress">Email Address:</label>
+    <input type="email" id="emailAddress" name="emailAddress" required><br>
+    
+    <button type="submit">Add Store</button>
+  </form>
+
+  <!-- Store List -->
+  <h2>Stores</h2>
+  <ul id="storeList"></ul>
+
+  <script>
+    // Function to add a new store
+    async function addStore(event) {
+      event.preventDefault();
+      const form = event.target;
+      const streetAddress = form.querySelector('#streetAddress').value.trim();
+      const city = form.querySelector('#city').value.trim();
+      const state = form.querySelector('#state').value.trim();
+      const country = form.querySelector('#country').value.trim();
+      const contactNo = form.querySelector('#contactNo').value.trim();
+      const emailAddress = form.querySelector('#emailAddress').value.trim();
+
+      if (!streetAddress || !city || !state || !country || !contactNo || !emailAddress) {
+        alert('Please fill out all fields.');
+        return;
+      }
+
+      const formData = {
+        StreetAddress: streetAddress,
+        City: city,
+        State: state,
+        Country: country,
+        Contact_No: parseInt(contactNo),
+        Email_Address: emailAddress
+      };
+
+      const response = await fetch('/stores', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+      if (response.ok) {
+        alert('Store added successfully');
+        form.reset();
+        // Refresh store list
+        getStores();
+      } else {
+        alert('Error adding store');
+      }
+    }
+
+    // Function to delete a store
+    async function deleteStore(storeId) {
+      const response = await fetch(`/stores/${storeId}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        alert('Store deleted successfully');
+        // Refresh store list
+        getStores();
+      } else {
+        alert('Error deleting store');
+      }
+    }
+
+    // Function to fetch stores from the server
+    async function getStores() {
+      const response = await fetch('/stores');
+      const stores = await response.json();
+      const storeList = document.getElementById('storeList');
+      storeList.innerHTML = '';
+      stores.forEach(store => {
+        const li = document.createElement('li');
+        li.textContent = `${store.StreetAddress}, ${store.City}, ${store.State}, ${store.Country}`;
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', () => deleteStore(store.StoreID));
+        li.appendChild(deleteButton);
+        storeList.appendChild(li);
+      });
+    }
+
+    // Initial load: Fetch and display stores
+    getStores();
+
+    // Event listener for form submission
+    document.getElementById('addStoreForm').addEventListener('submit', addStore);
+  </script>
+</body>
+</html>
